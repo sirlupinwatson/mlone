@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MLOne | Asynchronous Layer of quantum.one</title>
+  <style>
+    :root {
+      --bg-dark: #0a0c10;
+      --card-bg: #12161f;
+      --accent-cyan: #00f0ff;
+      --accent-magenta: #ff0055;
+      --accent-amber: #ffb700;
+      --text-main: #e2e8f0;
+      --text-muted: #8a99ad;
+      --font-mono: 'Courier New', Courier, monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Pixel Grid Effect (Pixbits theme integration) */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: radial-gradient(circle, rgba(0,240,255,0.03) 1px, transparent 1px);
+      background-size: 20px 20px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    header {
+      border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+      padding: 1.5rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      z-index: 10;
+      background: rgba(10, 12, 16, 0.8);
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+    }
+
+    .brand-logo {
+      font-family: var(--font-mono);
+      font-weight: bold;
+      font-size: 1.25rem;
+      letter-spacing: 2px;
+      color: var(--accent-cyan);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .brand-logo .parent-tag {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    nav {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    nav button {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      cursor: pointer;
+      padding: 0.5rem 1rem;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    nav button.active, nav button:hover {
+      color: var(--accent-cyan);
+    }
+
+    nav button.active::after {
+      content: "";
+      position: absolute;
+      bottom: -1.5rem;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--accent-cyan);
+      box-shadow: 0 0 8px var(--accent-cyan);
+    }
+
+    main {
+      flex: 1;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 3rem 2rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    /* Page 1: Services & Overview */
+    .hero {
+      margin-bottom: 4rem;
+      margin-bottom: 2rem;
+    }
+
+    .hero h1 {
+      font-size: 2.8rem;
+      margin-bottom: 1rem;
+      font-weight: 800;
+      background: linear-gradient(90deg, #fff, var(--accent-cyan));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      max-width: 800px;
+      
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 2rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      padding: 2rem;
+      position: relative;
+      transition: border-color 0.3s ease;
+    }
+
+    .card:hover {
+      border-color: rgba(0, 240, 255, 0.3);
+    }
+
+    .card.highlight {
+      border-color: rgba(255, 0, 85, 0.4);
+    }
+
+    .card h3 {
+      font-family: var(--font-mono);
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      color: var(--accent-cyan);
+    }
+
+    .card.highlight h3 {
+      color: var(--accent-magenta);
+    }
+
+    .card p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .pill-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .pill {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 4px 10px;
+      border-radius: 4px;
+      color: var(--text-main);
+    }
+
+    /* Page 2: Agent Demo Space */
+    .demo-container {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 2rem;
+      background: var(--card-bg);
+      border: 1px solid rgba(0, 240, 255, 0.2);
+      border-radius: 8px;
+      height: 600px;
+      overflow: hidden;
+    }
+
+    .demo-container h4 p {
+        font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;
+    }
+
+    .sidebar {
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 1.5rem;
+      background: rgba(0,0,0,0.2);
+    }
+
+    .sidebar h4 {
+      font-family: var(--font-mono);
+      color: var(--accent-cyan);
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      letter-spacing: 1px;
+    }
+
+    .agent-status {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .agent-card {
+      background: rgba(255,255,255,0.03);
+      padding: 1rem;
+      border-radius: 6px;
+      border-left: 3px solid var(--accent-magenta);
+    }
+
+    .agent-card .name {
+      font-family: var(--font-mono);
+      font-weight: bold;
+      color: #fff;
+    }
+
+    .agent-card .role {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .terminal-space {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 1.5rem;
+      background: #080a0d;
+      font-family: var(--font-mono);
+    }
+
+    .terminal-logs {
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      font-size: 0.9rem;
+    }
+
+    .log-entry {
+      line-height: 1.4;
+    }
+
+    .log-entry .tag {
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 0.75rem;
+      margin-right: 8px;
+    }
+
+    .tag.gemx { background: rgba(255, 0, 85, 0.2); color: var(--accent-magenta); border: 1px solid var(--accent-magenta); }
+    .tag.system { background: rgba(0, 240, 255, 0.2); color: var(--accent-cyan); border: 1px solid var(--accent-cyan); }
+
+    .input-bar {
+      margin-top: 1rem;
+      display: flex;
+      gap: 1rem;
+    }
+
+    .input-bar input {
+      flex: 1;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 0.75rem 1rem;
+      color: #fff;
+      font-family: var(--font-mono);
+      border-radius: 4px;
+    }
+
+    .input-bar input:focus {
+      outline: none;
+      border-color: var(--accent-cyan);
+    }
+
+    .input-bar button {
+      background: var(--accent-cyan);
+      color: #000;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      font-weight: bold;
+      font-family: var(--font-mono);
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 1.5rem 2rem;
+      text-align: center;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand-logo">
+      MLONE <span class="parent-tag">async layer of quantum.one</span>
+    </div>
+    <nav>
+      <button class="active" onclick="switchPage('services')">01_SERVICES</button>
+      <button onclick="switchPage('demo')">02_SECURITY_AGENT</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- PAGE 1: SERVICES & ADVISORY -->
+    <section id="services" class="page active">
+      <div class="hero">
+        <h1>Asynchronous Intelligence & Architectural Assurance</h1>
+        <p>MLOne delivers high-level Machine Learning and AGI strategic advisory, paired with specialized AI security engineering. We align multi-agent orchestration, robust architectures, and automated oversight.</p>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <h3>// High-Level ML & AGI Advisory</h3>
+          <p>Navigating the transition from task-specific models to resilient autonomous systems and AGI-ready architectures.</p>
+          <div class="pill-list">
+            <span class="pill">Strategic Roadmap</span>
+            <span class="pill">AGI Governance</span>
+            <span class="pill">System Orchestration</span>
+          </div>
+        </div>
+
+        <div class="card highlight">
+          <h3>// Security & Safety Domain</h3>
+          <p>Adversarial resistance, runtime alignment, and integrity verification for distributed agent workflows.</p>
+          <div class="pill-list">
+            <span class="pill">Agent Guardrails</span>
+            <span class="pill">Threat Modeling</span>
+            <span class="pill">Zero-Trust AI</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>// Multi-Agent Architecture</h3>
+          <p>Designing balanced agent ecosystems that split monolithic workloads into specialized, asynchronous executions.</p>
+          <div class="pill-list">
+            <span class="pill">Asynchronous Pipeline</span>
+            <span class="pill">Consensus Protocol</span>
+            <span class="pill">Workload Distribution</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGE 2: GEMX SECURITY AGENT DEMO -->
+    <section id="demo" class="page">
+      <div class="hero">
+        <h1>Asynchronous Agent Sandbox</h1>
+        <p>Observing single vs. orchestrating agents in runtime verification and system auditing.</p>
+      </div>
+
+      <div class="demo-container">
+        <div class="sidebar">
+          <h4>Active Agent Context</h4>
+          <div class="agent-status">
+            <div class="agent-card">
+              <div class="name">GemX</div>
+              <div class="role">Specialized Security Agent</div>
+              <p>
+                Task: Auditing architecture, boundary enforcement, and multi-agent coordination safety.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="terminal-space">
+          <div class="terminal-logs" id="logs">
+            <div class="log-entry">
+              <span class="tag system">SYSTEM</span> [MLOne Core initialized...] Connected to quantum.one async bus.
+            </div>
+            <div class="log-entry">
+              <span class="tag gemx">GemX</span> Security Agent ready. Awaiting operational input or architectural schema audit requests.
+            </div>
+          </div>
+
+          <div class="input-bar">
+            <input type="text" id="userInput" placeholder="Submit architecture query or security audit command..." onkeypress="handleKey(event)">
+            <button onclick="sendCommand()">EXECUTE</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    MLOne &copy; 2026 | Harmonized under quantum.one x pixbits framework
+  </footer>
+
+  <script>
+    function switchPage(pageId) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+      
+      document.getElementById(pageId).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    function sendCommand() {
+      const input = document.getElementById('userInput');
+      const logs = document.getElementById('logs');
+      if (!input.value.trim()) return;
+
+      const userMsg = document.createElement('div');
+      userMsg.className = 'log-entry';
+      userMsg.innerHTML = `<span class="tag system">USER</span> ${input.value}`;
+      logs.appendChild(userMsg);
+
+      const query = input.value;
+      input.value = '';
+
+      setTimeout(() => {
+        const agentMsg = document.createElement('div');
+        agentMsg.className = 'log-entry';
+        agentMsg.innerHTML = `<span class="tag gemx">GemX</span> Analyzing architectural workload for: "${query}". Verification pattern complete: No single agent point of failure detected. Workload distributed asynchronously across core pipeline.`;
+        logs.appendChild(agentMsg);
+        logs.scrollTop = logs.scrollHeight;
+      }, 600);
+
+      logs.scrollTop = logs.scrollHeight;
+    }
+
+    function handleKey(e) {
+      if (e.key === 'Enter') sendCommand();
+    }
+  </script>
+</body>
+</html>
